@@ -1,82 +1,35 @@
 use std::path::PathBuf;
+use crate::step::{Amount, Print, Find, Step};
 
-#[derive(Debug)]
-pub enum Output {
-    Print,
-    Amount,
-}
-
-#[derive(Debug)]
-pub enum Action {
-    Print {
-        outputs: Vec<Output>,
-    },
-    Amount {
-        outputs: Vec<Output>,
-    },
-    Find {
-        query: String,
-        outputs: Vec<Output>,
-    },
-}
-
-#[derive(Debug)]
 pub struct Command {
     pub root: PathBuf,
-    pub action: Action,
+    pub steps: Vec<Box<dyn Step>>
 }
 
 impl Command {
     pub fn parse(args: &[String]) -> Result<Self, String> {
-        if args.len() < 2 {
-            return Err("Not enough arguments".to_string());
+        let root = PathBuf::from(&args[0]);
+        let mut steps: Vec<Box<dyn Step>> = Vec::new();
+        let mut i = 1;
+
+        while i < args.len() {
+            match args[i].as_str() {
+                "print" => steps.push(Box::new(Print)),
+                "amount" => steps.push(Box::new(Amount)),
+                "find" => {
+                    i += 1;
+                    let q = args.get(i)
+                        .ok_or("Find requires a query")?
+                        .clone();
+
+                    steps.push(Box::new(Find {query: q}));
+                }
+
+                other => return Err(format!("Unknown command: {}", other)),
+            }
+            i += 1;
         }
 
-        let root = PathBuf::from(&args[0]);
-
-        let action = match args[1].as_str() {
-            "print" => {
-                let mut outputs: Vec<Output> = Vec::new();
-
-                for arg in &args[2..] {
-                    match arg.as_str() {
-                        "amount" => outputs.push(Output::Amount),
-                        _ => return Err("Unknown output operation".to_string()),
-                    };
-                }
-                
-                Action::Print {outputs}
-            },
-            "find" => {
-                let query = args[2].clone();
-                let mut outputs: Vec<Output> = Vec::new();
-
-                for arg in &args[3..] {
-                    match arg.as_str() {
-                        "print" => outputs.push(Output::Print),
-                        "amount" => outputs.push(Output::Amount),
-                        _ => return Err("Unknown output operation".to_string()),
-                    };
-                }
-
-                Action::Find {query, outputs}
-            } // find
-            "amount" => {
-                let mut outputs: Vec<Output> = Vec::new();
-
-                for arg in &args[2..] {
-                    match arg.as_str() {
-                        "print" => outputs.push(Output::Print),
-                        _ => return Err("Unknown output operation".to_string()),
-                    };
-                }
-                
-                Action::Amount {outputs}
-            },
-
-            _ => return Err("Unknown command".to_string()),
-        };
-
-        Ok(Command {root, action})
+        Ok(Command {root, steps})
     }
-}
+} 

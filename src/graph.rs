@@ -17,9 +17,9 @@ enum EdgeType {
 
 #[derive(Debug, Clone)]
 pub struct Node {
-    name: String,
+    pub name: String,
     pub node_type: NodeType,
-    pub path: PathBuf,
+    //pub path: PathBuf,
     //size: u64,
     //modified: String,
 }
@@ -32,6 +32,7 @@ struct Edge {
 }
 
 pub struct Graph {
+    pub root_id: usize,
     pub nodes: HashMap<usize, Node>,
     adjacency: HashMap<usize, Vec<Edge>>,
     next_id: usize,
@@ -40,6 +41,7 @@ pub struct Graph {
 impl Graph {
     pub fn new() -> Graph {
         Graph {
+            root_id: usize::MAX,
             nodes: HashMap::new(),
             adjacency: HashMap::new(),
             next_id: 0,
@@ -57,22 +59,23 @@ impl Graph {
             ));
         }
 
-        let root_id = self.add_vertex(Node {
+        self.root_id = self.add_vertex(Node {
             name: root.file_name()
                 .unwrap()
                 .to_string_lossy()
                 .into_owned(),
             node_type: NodeType::Directory,
-            path: root.clone(),
+            //path: root.clone(),
             //size: 0,
             //modified: format!("{:?}", metadata.modified()?),
         });
 
         let mut path_to_id = HashMap::new();
-        path_to_id.insert(root.clone(), root_id);
+        path_to_id.insert(root.clone(), self.root_id);
 
         let mut pending_links: Vec<(usize, PathBuf)> = Vec::new();
 
+        let root_id = self.root_id.clone();
         Self::visit_directory(
             &mut self,
             root_id,
@@ -124,7 +127,7 @@ impl Graph {
                     NodeType::File
                 },
 
-                path: path.clone(),
+                //path: path.clone(),
 
                 //size: if is_dir { 0 } else { metadata.len() },
 
@@ -211,80 +214,5 @@ impl Graph {
             .push(edge);
 
         Ok(())
-    }
-
-    pub fn find(&self, query: &str) -> Vec<usize> {
-        let mut results: Vec<usize> = Vec::new();
-
-        for (id, node) in &self.nodes {
-            if node.name.contains(query) {
-                results.push(*id);
-            }
-        }
-
-        results
-    }
-
-    pub fn amount_of(&self) -> (usize, usize) {
-        let mut amount_files: usize = 0;
-        let mut amount_directories: usize = 0;
-        
-        for (_, node) in &self.nodes {
-            match node.node_type {
-                NodeType::File => amount_files += 1,
-                NodeType::Directory => amount_directories += 1,
-            }
-        }
-
-        (amount_files, amount_directories)
-     }
-
-    pub fn print_tree(&self, root_id: usize) {
-        let Some(root) = self.nodes.get(&root_id) else {
-            println!("Node {} does not exist", root_id);
-            return;
-        };
-
-        println!("{}/", root.name);
-
-        self.print_tree_children(root_id, "");
-    }
-
-    fn print_tree_children(&self, dir_id: usize, prefix: &str) {
-        let children: Vec<usize> = self.adjacency
-            .get(&dir_id)
-            .into_iter()
-            .flatten()
-            .filter(|edge| edge.edge_type == EdgeType::Contains)
-            .map(|edge| edge.to)
-            .collect();
-
-        for (index, child_id) in children.iter().enumerate() {
-            let is_last = index == children.len() - 1;
-
-            let Some(child) = self.nodes.get(child_id) else {
-                continue;
-            };
-
-            let branch = if is_last {
-                "└── "
-            } else {
-                "├── "
-            };
-
-            let suffix = if child.node_type == NodeType::Directory {
-                "/"
-            } else {
-                ""
-            };
-
-            println!("{}{}{}{}", prefix, branch, child.name, suffix);
-
-            if child.node_type == NodeType::Directory {
-                let new_prefix = format!("{}{}", prefix, if is_last {"    "} else {"│   "});
-
-                self.print_tree_children(*child_id, &new_prefix);
-            }
-        }
     }
 }
