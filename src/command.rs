@@ -1,5 +1,5 @@
 use std::path::PathBuf;
-use crate::step::{Amount, Print, Find, Step};
+use crate::step::{Amount, Print, Find, Step, Tree};
 
 pub struct Command {
     pub root: PathBuf,
@@ -15,6 +15,7 @@ impl Command {
         while i < args.len() {
             match args[i].as_str() {
                 "print" => steps.push(Box::new(Print)),
+                "tree" => steps.push(Box::new(Tree)),
                 "amount" => steps.push(Box::new(Amount)),
                 "find" => {
                     i += 1;

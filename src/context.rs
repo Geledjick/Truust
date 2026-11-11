@@ -7,9 +7,10 @@ pub struct Context<'a> {
 
 impl<'a> Context<'a> {
     pub fn new(graph: &'a Graph) -> Self {
-        Context {
-            nodes:graph.nodes.keys().copied().collect(),
-            graph,
-        }
+        let nodes = (0..graph.nodes.len())
+            .filter(|&id| id != graph.root_id)
+            .collect();
+
+        Context {graph, nodes}
     }
 }
