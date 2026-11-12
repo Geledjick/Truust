@@ -19,7 +19,7 @@ fn main() -> io::Result<()> {
     let graph = Graph::new()
         .from_dir(&command.root)?;
 
-    let mut ctx = Context::new(&graph);
+    let mut ctx = Context::new(graph);
 
     for step in &command.steps {
         step.run(&mut ctx);
