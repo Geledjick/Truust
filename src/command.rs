@@ -8,10 +8,23 @@ pub struct Command {
 
 impl Command {
     pub fn parse(args: &[String]) -> Result<Self, String> {
-        let root = PathBuf::from(&args[0]);
-        let mut steps: Vec<Box<dyn Step>> = Vec::new();
-        let mut i = 1;
+        if args.is_empty() {
+            return Err("No commands provided".to_string());
+        }
+        
+        let (root, _) = match args[0].as_str() {
+            "print" | "tree" | "amount" | "find" => {
+                (PathBuf::from("."), &args[0..])
+            }
 
+            _ => {
+                (PathBuf::from(&args[0]), &args[1..])
+            }
+        };
+        
+        let mut steps: Vec<Box<dyn Step>> = Vec::new();
+        let mut i = 0;
+        
         while i < args.len() {
             match args[i].as_str() {
                 "print" => steps.push(Box::new(Print)),
@@ -29,6 +42,10 @@ impl Command {
                 other => return Err(format!("Unknown command: {}", other)),
             }
             i += 1;
+        }
+
+        if steps.is_empty() {
+            return Err("No commands provided".to_string());
         }
 
         Ok(Command {root, steps})

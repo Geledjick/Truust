@@ -40,13 +40,13 @@ pub struct Amount;
 impl Step for Amount {
     fn run(&self, ctx: &mut Context) {
         let mut files = 0;
-        let mut dirs  = 0;
+        let mut dirs = 0;
         let mut links = 0;
 
         for &id in &ctx.nodes {
             match ctx.graph.nodes[id].node_type {
                 NodeType::File => files += 1,
-                NodeType::Dir => dirs  += 1,
+                NodeType::Dir => dirs += 1,
                 NodeType::Link { .. } => links += 1,
             }
         }
