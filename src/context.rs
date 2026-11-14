@@ -5,6 +5,6 @@ pub struct Context {
 }
 impl Context {
     pub fn new(graph: Graph) -> Context {
-        Context {graph}
+        Context { graph }
     }
 }

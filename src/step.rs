@@ -1,7 +1,8 @@
 use std::collections::HashMap;
+use std::io;
 
 use crate::context::Context;
-use crate::graph::NodeType;
+use crate::graph::{Graph, NodeType};
 
 use globset::Glob;
 
@@ -27,6 +28,7 @@ pub fn registry() -> HashMap<&'static str, Parser> {
         let n = args.next().ok_or("remove requires a name")?;
         Ok(Box::new(Remove { name: n.clone() }))
     });
+    map.insert("clear", |_| Ok(Box::new(Clear)));
 
     // outputs
     map.insert("print", |_| Ok(Box::new(Print)));
@@ -69,21 +71,27 @@ impl Step for Remove {
     }
 }
 
+pub struct Clear;
+impl Step for Clear {
+    fn run(&self, ctx: &mut Context) {
+        ctx.graph = Graph::new();
+    }
+
+    fn is_output(&self) -> bool {
+        true
+    }
+}
+
 // Outputs
 pub struct Print;
 impl Step for Print {
     fn run(&self, ctx: &mut Context) {
         for node in &ctx.graph.nodes {
-            let suffix: &str;
-            
-            match node.node_type {
-                NodeType::Link { .. } => suffix = " -> ...",
-                NodeType::Dir => continue,
-
-                _ => suffix = "",
-            };
-            
-            println!("{}{}", node.name, suffix);
+            match &node.node_type {
+                NodeType::Dir { .. } => continue,
+                NodeType::Link { .. } => println!("{} -> ...", node.name),
+                NodeType::File { .. } => println!("{}", node.name),
+            }
         }
     }
 
@@ -95,7 +103,11 @@ impl Step for Print {
 pub struct Tree;
 impl Step for Tree {
     fn run(&self, ctx: &mut Context) {
-        ctx.graph.print_tree(ctx.graph.root_id, "");
+        if let Err(e) = ctx.graph.print_tree(ctx.graph.root_id, "") {
+            if e.kind() != io::ErrorKind::BrokenPipe {
+                eprintln!("{}", e);
+            }
+        }
     }
 
     fn is_output(&self) -> bool {
@@ -112,8 +124,8 @@ impl Step for Amount {
 
         for node in &ctx.graph.nodes {
             match node.node_type {
-                NodeType::File => files += 1,
-                NodeType::Dir => dirs += 1,
+                NodeType::File { .. } => files += 1,
+                NodeType::Dir { .. } => dirs += 1,
                 NodeType::Link { .. } => links += 1,
             }
         }
@@ -130,7 +142,7 @@ impl Step for Amount {
 pub struct Help;
 impl Step for Help {
     fn run(&self, _: &mut Context) {
-        println!("
+        println!("\
             Truust 🌲 — a tree alternative with a pipeline CLI
             
             USAGE:
@@ -150,6 +162,10 @@ impl Step for Help {
                     print               List results flat
                     amount              Count files, dirs and symlinks
                     help                Show this message
+                    version             Show version of Truust
+
+                Other:
+                    clear               Clear current graph.
             
             EXAMPLES:
                 truust tree
@@ -168,7 +184,7 @@ impl Step for Help {
             
                 Patterns with /   match against full path
                 Patterns without / match against filename only
-        ");
+        ...");
     }
 
     fn is_output(&self) -> bool {

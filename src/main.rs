@@ -1,12 +1,11 @@
 mod graph; use graph::Graph;
-mod context;
+mod context; use context::Context;
 mod step;
 mod command; use command::Command;
 
+use std::fs;
 use std::io;
 use std::env;
-
-use crate::context::Context;
 
 fn main() -> io::Result<()> {
     let args: Vec<String> = env::args()
@@ -16,14 +15,14 @@ fn main() -> io::Result<()> {
     let command = Command::parse(&args)
         .map_err(|e| io::Error::new(io::ErrorKind::InvalidInput, e))?;
 
-    let graph = Graph::new()
-        .from_dir(&command.root)?;
-
+    let root = fs::canonicalize(&command.root)?;
+    
+    let graph = Graph::new().from_dir(&root)?;
+    
     let mut ctx = Context::new(graph);
-
     for step in &command.steps {
         step.run(&mut ctx);
     }
-    
+
     Ok(())
 }

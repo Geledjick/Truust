@@ -10,13 +10,13 @@ cargo install --path .
 If `path` is omitted, the current directory is used.
 
 Commands are chained into a **pipeline** — each one transforms or reads the current state:
-```bash
-truust find “*.rs” remove “target” tree
 ```
-│ │ │
-│ │ └─ display as tree
-│ └─ remove target/ from results
-└─ filter to .rs files
+truust find "*.rs" remove "target" tree
+         │               │           │
+         │               │           └─ display as tree
+         │               └─ remove target/ from results  
+         └─ filter to .rs files
+```
 
 ## Commands
 | Command | Type | Description |
@@ -26,6 +26,8 @@ truust find “*.rs” remove “target” tree
 | `tree` | Output | Display results as a tree |
 | `print` | Output | List results flat |
 | `amount` | Output | Count files, dirs and symlinks |
+| `version` | Output | Show version of Truust |
+| `clear` | Other | Clear current graph |
 
 ## Examples
 ```bash
