@@ -1,0 +1,1 @@
+sudo cp ./target/release/truust /bin
