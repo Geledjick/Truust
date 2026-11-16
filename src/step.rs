@@ -11,6 +11,9 @@ pub trait Step {
     fn is_output(&self) -> bool {
         false
     }
+    fn need_graph(&self) -> bool {
+        true
+    }
 }
 
 // Parser
@@ -190,6 +193,10 @@ impl Step for Help {
     fn is_output(&self) -> bool {
         true
     }
+
+    fn need_graph(&self) -> bool {
+        false
+    }
 }
 
 pub struct Version;
@@ -200,5 +207,9 @@ impl Step for Version {
 
     fn is_output(&self) -> bool {
         true
+    }
+
+    fn need_graph(&self) -> bool {
+        false
     }
 }

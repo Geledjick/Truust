@@ -16,13 +16,17 @@ fn main() -> io::Result<()> {
         .map_err(|e| io::Error::new(io::ErrorKind::InvalidInput, e))?;
 
     let root = fs::canonicalize(&command.root)?;
-    
-    let graph = Graph::new().from_dir(&root)?;
+
+    let graph = if command.need_graph {
+        Graph::new().from_dir(&root)?
+    } else {
+        Graph::new()
+    };
     
     let mut ctx = Context::new(graph);
     for step in &command.steps {
         step.run(&mut ctx);
     }
-
+    
     Ok(())
 }
