@@ -26,7 +26,7 @@ fn main() -> io::Result<()> {
         Graph::new()
     };
     
-    let mut ctx = Context::new(graph);
+    let mut ctx = Context::new(graph, root);
     for step in &command.steps {
         step.run(&mut ctx);
     }

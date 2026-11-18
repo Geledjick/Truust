@@ -121,15 +121,30 @@ impl Step for Tree {
 pub struct Amount;
 impl Step for Amount {
     fn run(&self, ctx: &mut Context) {
-        let mut files = 0;
-        let mut dirs = 0;
-        let mut links = 0;
+        let mut files: u64 = 0;
+        let mut dirs: u64 = 0;
+        let mut links: u64 = 0;
 
-        for node in &ctx.graph.nodes {
-            match node.node_type {
-                NodeType::File { .. } => files += 1,
-                NodeType::Dir { .. } => dirs += 1,
-                NodeType::Link { .. } => links += 1,
+        if ctx.graph.nodes.is_empty() {
+            for entry in std::fs::read_dir(&ctx.root).expect("Failed to read directory") {
+                let entry = entry.expect("Failde to read entry");
+                let metadata = entry.metadata().expect("Failder to read metadata");
+
+                if metadata.is_file() {
+                    files += 1;
+                } else if metadata.is_dir() {
+                    dirs += 1;
+                } else if metadata.file_type().is_symlink() {
+                    links += 1;
+                }
+            }
+        } else {
+            for node in &ctx.graph.nodes {
+                match node.node_type {
+                    NodeType::File { .. } => files += 1,
+                    NodeType::Dir { .. } => dirs += 1,
+                    NodeType::Link { .. } => links += 1,
+                }
             }
         }
 
@@ -138,6 +153,10 @@ impl Step for Amount {
 
     fn is_output(&self) -> bool {
         true
+    }
+
+    fn need_graph(&self) -> bool {
+        false
     }
 }
 

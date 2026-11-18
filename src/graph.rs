@@ -52,7 +52,8 @@ impl Graph {
         }
 
         let mut new_graph = Graph::new();
-
+        new_graph.nodes.reserve(self.nodes.capacity());
+        
         let root = &self.nodes[self.root_id];
         let new_root_id = new_graph.add_node(root.clone());
 
