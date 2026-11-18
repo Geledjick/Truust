@@ -7,6 +7,9 @@ use std::fs;
 use std::io;
 use std::env;
 
+#[global_allocator]
+static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
+
 fn main() -> io::Result<()> {
     let args: Vec<String> = env::args()
         .skip(1)

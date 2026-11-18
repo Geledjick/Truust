@@ -140,6 +140,8 @@ impl Graph {
             ));
         }
 
+        self.nodes.reserve(65536);
+
         let root_id = self.add_node(Node {
             name: root.file_name().unwrap().to_string_lossy().into_owned(),
             node_type: NodeType::Dir {children: Vec::new()},
@@ -165,7 +167,7 @@ impl Graph {
                 }
             };
     
-            entries.sort_by_key(|e| e.file_name());
+            entries.sort_unstable_by(|a, b| a.path().cmp(&b.path()));
     
             for entry in entries {
                 let path = entry.path();

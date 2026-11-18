@@ -1,6 +1,6 @@
 [package]
 name = "truust"
-version = "0.1.1"
+version = "0.1.2"
 edition = "2024"
 description = "A tree alternative with a pipeline CLI"
 license = "MIT"
@@ -9,10 +9,11 @@ readme = "README.md"
 
 [profile.release]
 opt-level = 3
-lto = "fat"
+lto = true
 codegen-units = 1
 panic = "abort"
 strip = true
 
 [dependencies]
 globset = "0.4"
+mimalloc = { version = "0.1", default-features = false }

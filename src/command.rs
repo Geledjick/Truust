@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 
-use crate::step::{Tree, Amount, Print, Step, registry};
+use crate::step::{Tree, Amount, Step, registry};
 
 pub struct Command {
     pub root: PathBuf,
@@ -21,9 +21,9 @@ impl Command {
             });
         }
 
-        // Another
         let registry = registry();
-
+        
+        // Another
         let (root, args) = if registry.contains_key(args[0].as_str()) {
             (PathBuf::from("."), &args[0..])
         } else {
@@ -40,12 +40,13 @@ impl Command {
             steps.push(parser(&mut iter)?);
         }
 
+        if !steps.last().map(|s| s.is_output()).unwrap_or(false) {
+            steps.push(Box::new(Tree));
+            steps.push(Box::new(Amount));
+        }
+        
         let need_graph: bool = steps.last()
             .is_some_and(|s| s.need_graph());
-        
-        if !steps.last().map(|s| s.is_output()).unwrap_or(false) {
-            steps.push(Box::new(Print));
-        }
 
         if steps.is_empty() {
             return Err("No commands provided".to_string());
